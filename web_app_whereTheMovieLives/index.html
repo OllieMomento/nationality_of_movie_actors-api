@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+
+<body>
+
+
+    <div class="wrapper">
+        <div class="header">
+            <h1>
+                <img src="logo.png" alt="Where the Movie lives" />
+            </h1>
+            <div class="button_box2">
+                <form name="form_name" id="form_id" class="form-wrapper-2 cf">
+                    <input type="text" id="input-name" placeholder="Movie">
+                    <input type="button" value="Search" id="input-submit" onclick="return getMovieName()">
+                </form>
+            </div>
+
+        </div>
+
+
+        <h2 id="title"></h2>
+        <div id="container">
+            <img id="poster" />
+            <div id="actorsDiv">
+                <h3 id="actorsHeadline"></h3>
+                <ul id="actors">
+                    <img id="actorPic">
+                    <h4 id=actorName></h4>
+                </ul>
+            </div>
+
+
+        </div>
+        <div id="map"></div>
+
+    </div>
+
+
+    <script>
+        const actors = document.getElementById('actors');
+        var actorsData;
+        var title;
+        var moviePoster;
+        var dataG;
+        var map;
+
+        document.getElementById("input-name")
+            .addEventListener("keypress", function (event) {
+
+                if (event.keyCode === 13) {
+                    event.preventDefault();
+                    document.getElementById("input-submit").onclick();
+                }
+            });
+
+        function getMovieName() {
+            //clear ul
+            while (actors.firstChild) {
+                actors.removeChild(actors.firstChild);
+            }
+
+            var name = document.getElementById("input-name").value;
+
+            var encodedName = encodeURI(name);
+            console.log(encodedName);
+
+            fetch('http://127.0.0.1:10010/movie?name=' + encodedName)
+                .then(res => res.json())
+                .then(initMap)
+                .then(buildActors)
+                .catch(e => console.log(e));
+        }
+        function initMap(data) {
+            console.log(data);
+            if (data != null) {
+                var zoomAndCoord = getZoomAndCenter(data);
+
+                map = new google.maps.Map(document.getElementById('map'), {
+                    zoom: zoomAndCoord[0],
+                    center: { lat: zoomAndCoord[1], lng: zoomAndCoord[2] }
+                });
+
+
+                if (data != null) {
+                    for (var i = 0; i < Object.keys(data.actors).length; i++) {
+                        var coord = data.actors[i].coord;
+                        var marker = new google.maps.Marker({
+                            position: coord,
+                            map: map,
+
+                        });
+
+                        var infowindow = new google.maps.InfoWindow({
+                            maxWidth: 150
+                        });
+
+                        var content = "<div id='info'>" + data.actors[i].name + "</br>" +
+                            "<img src=https://image.tmdb.org/t/p/w500" + data.actors[i].pic + " width='120px'>" +
+                            "<p>" + data.actors[i].place_of_birth + "</p></div>";
+
+                        google.maps.event.addListener(marker, 'click', (function (marker, content, infowindow) {
+                            return function () {
+                                infowindow.setContent(content);
+                                infowindow.open(map, marker);
+                            };
+                        })(marker, content, infowindow));
+
+                    }
+                }
+            }
+            return data;
+        }
+
+        function buildActors(data) {
+            console.log(data);
+            actorsData = data;
+            document.getElementById("title").innerHTML = data.title;
+            poster = document.getElementById("poster");
+            if (data.title == "No results found") {
+                poster.src = data.moviePoster;
+                poster.style.height = "360px";
+                poster.style.width = "640px";
+                document.getElementById("actorsHeadline").innerHTML = "";
+                document.getElementById('map').innerHTML = "";
+            }
+            else {
+                poster.src = "https://image.tmdb.org/t/p/w500/" + data.moviePoster;
+                poster.style.height = "750px";
+                poster.style.width = "500px";
+
+
+                document.getElementById("actorsHeadline").innerHTML = "Actors";
+
+
+                data.actors.forEach(item => {
+                    const li = document.createElement('li');
+
+                    var actrorPicture = document.createElement("img");
+                    actrorPicture.src = "https://image.tmdb.org/t/p/w500" + item.pic;
+                    actrorPicture.style.width = '60px'
+                    actrorPicture.style.height = '90px'
+
+                    var actorName = document.createElement("h4");
+                    actorName.innerHTML = item.name;
+
+                    var actorPlace = document.createElement("p");
+                    actorPlace.innerHTML = item.place_of_birth;
+
+                    li.appendChild(actrorPicture);
+                    li.appendChild(actorName);
+                    li.appendChild(actorPlace);
+                    actors.appendChild(li);
+                })
+            }
+        }
+        function variance(arr) {
+            var len = 0;
+            var sum = 0;
+            for (var i = 0; i < arr.length; i++) {
+
+                len = len + 1;
+                sum = sum + parseFloat(arr[i]);
+            }
+            var v = 0;
+            if (len > 1) {
+                var mean = sum / len;
+                for (var i = 0; i < arr.length; i++) {
+                    if (arr[i] == "") { }
+                    else {
+                        v = v + (arr[i] - mean) * (arr[i] - mean);
+                    }
+                }
+                return v / len;
+            }
+            else {
+                return 0;
+            }
+        }
+        function getZoomAndCenter(data) {
+            var sumLat = 0;
+            var sumLng = 0;
+
+            var arrLat = [];
+            var arrLng = [];
+            dataG = data;
+            console.log(data);
+
+
+            for (var i = 0; i < Object.keys(data.actors).length; i++) {
+                sumLat += data.actors[i].coord.lat; //don't forget to add the base
+                sumLng += data.actors[i].coord.lng; //don't forget to add the base
+                arrLat.push(data.actors[i].coord.lat);
+                arrLng.push(data.actors[i].coord.lng);
+            }
+
+            var varLat = parseInt(variance(arrLat), 10);
+            var varLng = parseInt(variance(arrLng), 10);
+            var varSum = varLat + varLng;
+            console.log(varSum);
+
+            var zoom = 2;
+            if (varSum < 2000) {
+                zoom = 2;
+            }
+            if (varSum < 1500) {
+                zoom = 3;
+            }
+            if (varSum < 500) {
+                zoom = 4;
+            }
+            if (varSum < 100) {
+                zoom = 5;
+            }
+            if (varSum < 50) {
+                zoom = 6;
+            }
+
+            var avgLat = sumLat / Object.keys(data.actors).length;
+            var avgLng = sumLng / Object.keys(data.actors).length;
+
+            return [zoom, avgLat, avgLng];
+        }
+
+
+    </script>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDJSzIzcD5ERsobKd-K2PhvdcobT9-5mOM&callback=initMap">
+    </script>
+</body>
+
+</html>

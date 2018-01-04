@@ -1,0 +1,127 @@
+html, body {
+  background: #f1f1f1;
+  font-family: 'Merriweather', sans-serif;
+  padding: 1em;
+}
+
+
+h1 img{
+  display: block;
+    margin: auto;
+  width: 25%;
+}
+
+h2 {
+  padding-bottom: 1em;
+  font-family: "Helvetica Neue", Arial, sans-serif;
+   text-align: center;
+
+}
+#container {
+    display: flex; /* or inline-flex */
+    flex-direction: row;
+    padding-bottom: 10px;
+}
+#actorsHeadline {
+    padding-left: 10px;
+
+}
+
+#actorsDiv {
+  display: flex; /* or inline-flex */
+  flex-direction: column;
+
+}
+#actors {
+  display: flex; /* or inline-flex */
+  flex-direction: row;
+  flex-wrap:  wrap;
+
+}
+
+
+#map {
+    height: 700px;
+    width: 100%;
+    
+}
+
+
+form {
+   max-width: 600px;
+   text-align: center;
+   margin: 20px auto;
+   display: flex;
+   flex-direction: row ;
+  
+}
+#input-name {
+  width: 85%;
+  box-sizing: border-box;
+  border: 2px solid #ccc;
+  border-radius: 4px;
+  font-size: 16px;
+  background-color: white;
+  padding: 12px 20px 12px 20px;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+input[type=button] {
+  width: 15%;
+  margin: 0;
+  padding: 0.75rem 1rem;
+	border: 0;
+  border-radius: 0.317rem;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;  
+	background-color: #aaa;
+	color: #fff;
+	text-decoration: none;
+	font-weight: 700;
+	font-size: 1rem;
+  line-height: 1.5;
+	font-family: "Helvetica Neue", Arial, sans-serif;
+	cursor: pointer;
+	-webkit-appearance: none;
+	-webkit-font-smoothing: antialiased;
+
+}
+
+* {
+  margin: 0; 
+  padding: 0;
+  font-family: "Helvetica Neue", Arial, sans-serif;
+  
+}
+
+
+ul {
+  list-style-type: none;
+  
+}
+
+h4 {
+  font-family: "Helvetica Neue", Arial, sans-serif;
+}
+
+li img {
+  float: left;
+  margin: 0 15px 0 0;
+  
+}
+
+li p {
+  font: 200 12px/1.5 Georgia, Times New Roman, serif;
+}
+
+li {
+  padding: 10px;
+  overflow: auto;
+  width: 200px;
+}
+
+li:hover {
+  background: #eee;
+  cursor: pointer;
+}
+

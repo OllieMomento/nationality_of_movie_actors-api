@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+
+<body>
+
+
+
+    <h1>Where the Movie lives</h1>
+    <form name="form_name" id="form_id" onsubmit="return getMovieName()">
+        <input type="text" id="input-name" placeholder="Name">
+        <input type="submit" value="Submit" id="input-submit">
+    </form>
+
+    <h2 id="title"></h2>
+    <img id="poster" />
+    <h3 id="actorsHeadline"></h3>
+    <div id="container">
+        <ul id="actors"></ul>
+        <div id="map"></div>
+    </div>
+
+
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDJSzIzcD5ERsobKd-K2PhvdcobT9-5mOM&callback=initMap">
+    </script>
+
+    <script>
+        const actors = document.getElementById('actors');
+        var actorsData;
+        var title;
+        var moviePoster;
+        var dataG;
+
+        function getMovieName() {
+            //clear ul
+            while (actors.firstChild) {
+                actors.removeChild(actors.firstChild);
+            }
+
+            var name = document.getElementById("input-name").value;
+
+            var encodedName = encodeURI(name);
+            console.log(encodedName);
+
+            fetch('http://127.0.0.1:10010/movie?name=' + encodedName)
+                .then(res => res.json())
+                .then(initMap)
+                .then(buildActors)
+                .catch(e => console.log(e));
+        }
+        function initMap(data) {
+            console.log
+            if (data != null) {
+                var zoomAndCoord = getZoomAndCenter(data);
+
+                var map = new google.maps.Map(document.getElementById('map'), {
+                    zoom: zoomAndCoord[0],
+                    center: { lat: zoomAndCoord[1], lng: zoomAndCoord[2] }
+                });
+
+
+                if (data != null) {
+                    for (var i = 0; i < Object.keys(data.actors).length; i++) {
+                        var coord = data.actors[i].coord;
+                        var marker = new google.maps.Marker({
+                            position: coord,
+                            map: map,
+
+                        });
+
+                        var infowindow = new google.maps.InfoWindow({
+                            maxWidth: 150
+                        });
+
+                        var content = "<div id='info'>" + data.actors[i].name + "</br>"+
+                            "<img src=https://image.tmdb.org/t/p/w500" + data.actors[i].pic + " width='140px' height='180px'>" +
+                            "<p>" + data.actors[i].place_of_birth + "</p></div>";
+
+                        google.maps.event.addListener(marker, 'click', (function (marker, content, infowindow) {
+                            return function () {
+                                infowindow.setContent(content);
+                                infowindow.open(map, marker);
+                            };
+                        })(marker, content, infowindow));
+
+                    }
+                }
+                return data;
+            }
+        }
+        function buildActors(data) {
+            console.log(data);
+            actorsData = data;
+            document.getElementById("title").innerHTML = data.title;
+            document.getElementById("actorsHeadline").innerHTML = "Actors";
+            document.getElementById("poster").src = "https://image.tmdb.org/t/p/w500/" + data.moviePoster;
+            data.actors.forEach(item => {
+                const li = document.createElement('li');
+                li.appendChild(document.createTextNode(item.name));
+                actors.appendChild(li);
+            })
+        }
+        function variance(arr) {
+            var len = 0;
+            var sum = 0;
+            for (var i = 0; i < arr.length; i++) {
+
+                len = len + 1;
+                sum = sum + parseFloat(arr[i]);
+            }
+            var v = 0;
+            if (len > 1) {
+                var mean = sum / len;
+                for (var i = 0; i < arr.length; i++) {
+                    if (arr[i] == "") { }
+                    else {
+                        v = v + (arr[i] - mean) * (arr[i] - mean);
+                    }
+                }
+                return v / len;
+            }
+            else {
+                return 0;
+            }
+        }
+        function getZoomAndCenter(data) {
+            var sumLat = 0;
+            var sumLng = 0;
+
+            var arrLat = [];
+            var arrLng = [];
+            dataG = data;
+            console.log(data);
+
+
+            for (var i = 0; i < Object.keys(data.actors).length; i++) {
+                sumLat += data.actors[i].coord.lat; //don't forget to add the base
+                sumLng += data.actors[i].coord.lng; //don't forget to add the base
+                arrLat.push(data.actors[i].coord.lat);
+                arrLng.push(data.actors[i].coord.lng);
+            }
+            var array = [1, 2, 3, 4, 5, 6, 7, 1];
+            var varLat = parseInt(variance(arrLat), 10);
+            var varLng = parseInt(variance(arrLng), 10);
+            console.log("PICA:" + varLat);
+            console.log("PICA2:" + varLng);
+            var varSum = varLat + varLng;
+
+            var zoom = 1;
+            if (varSum < 2000) {
+                zoom = 2;
+            }
+            if (varSum < 200) {
+                zoom = 3;
+            }
+            if (varSum < 100) {
+                zoom = 4;
+            }
+            if (varSum < 50) {
+                zoom = 5;
+            }
+
+            var avgLat = sumLat / Object.keys(data.actors).length;
+            var avgLng = sumLng / Object.keys(data.actors).length;
+
+            return [zoom, avgLat, avgLng];
+        }  
+    </script>
+</body>
+
+</html>
